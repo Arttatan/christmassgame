@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0f3d2e">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='52' font-size='52'%3E🎅%3C/text%3E%3C/svg%3E">
+  <title>Дед Мороз собирает подарки</title>
+  <style>
+    :root {
+      --green: #0f3d2e;
+      --cream: #f5efe0;
+      --gold: #d4af37;
+      --wine: #7b2d3b;
+      --basket-w: 110px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--green);
+      color: var(--cream);
+      font-family: "Segoe UI", "PT Sans", sans-serif;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      overscroll-behavior: none;
+    }
+
+    button, input { font-family: inherit; }
+
+    /* Снежинки на весь экран, клики проходят сквозь них */
+    #sky {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .flake {
+      position: absolute;
+      top: -12%;
+      color: rgba(245, 239, 224, 0.8);
+      animation-name: snowfall;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      will-change: transform;
+    }
+
+    @keyframes snowfall {
+      to { transform: translateY(115vh) rotate(360deg); }
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: rgba(8, 32, 24, 0.5);
+      border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+      padding: 10px 14px calc(10px + env(safe-area-inset-top));
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 12px;
+      font-size: 16px;
+      line-height: 1.35;
+    }
+
+    header p { margin: 0; }
+
+    #hud.hidden { display: none; }
+
+    #hudRound { grid-column: 1 / -1; color: var(--gold); font-weight: 700; }
+
+    #field {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .forest {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1;
+      width: 100%;
+      padding-bottom: env(safe-area-inset-bottom);
+      font-size: 30px;
+      letter-spacing: 8px;
+      line-height: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      opacity: 0.38;
+      pointer-events: none;
+    }
+
+    .ground {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 78px;
+      z-index: 1;
+      pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgba(245, 239, 224, 0.16));
+    }
+
+    .item {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 3;
+      line-height: 1;
+      pointer-events: none;
+      will-change: transform;
+    }
+
+    .glyph {
+      display: block;
+      animation: sway 1.5s ease-in-out infinite;
+    }
+
+    @keyframes sway {
+      50% { transform: translateX(5px) rotate(8deg); }
+    }
+
+    #sled {
+      position: absolute;
+      bottom: calc(14px + env(safe-area-inset-bottom));
+      z-index: 4;
+      width: var(--basket-w);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .santa {
+      display: block;
+      font-size: 48px;
+      line-height: 1;
+      animation: bob 0.55s ease-in-out infinite;
+    }
+
+    .basket {
+      display: block;
+      margin-top: -8px;
+      font-size: 44px;
+      line-height: 1;
+    }
+
+    @keyframes bob {
+      50% { transform: translateY(3px); }
+    }
+
+    #sled.pop .basket { animation: catchpop 0.22s ease; }
+
+    @keyframes catchpop {
+      50% { transform: scale(1.2); }
+    }
+
+    #effectline {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 4px);
+      transform: translateX(-50%);
+      width: max-content;
+      max-width: 78vw;
+      min-height: 1.2em;
+      color: var(--gold);
+      font-size: 14px;
+      font-weight: 700;
+      text-shadow: 0 1px 2px #06241b;
+      white-space: nowrap;
+    }
+
+    #float {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 26px);
+      width: max-content;
+      max-width: 80vw;
+      padding: 6px 10px;
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      background: rgba(8, 32, 24, 0.9);
+      color: var(--cream);
+      font-size: 15px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    #float.show { animation: popfloat 2.5s ease forwards; }
+
+    @keyframes popfloat {
+      0% { opacity: 0; transform: translate(-50%, 8px); }
+      12% { opacity: 1; transform: translate(-50%, 0); }
+      72% { opacity: 1; transform: translate(-50%, 0); }
+      100% { opacity: 0; transform: translate(-50%, -16px); }
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom));
+      background: rgba(6, 22, 16, 0.78);
+    }
+
+    .overlay.hidden { display: none; }
+
+    .card {
+      width: min(480px, 100%);
+      max-height: min(92dvh, 760px);
+      overflow: auto;
+      padding: 22px 18px;
+      border: 2px solid var(--gold);
+      border-radius: 20px;
+      background: #14543d;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    h1, h2 {
+      margin: 0 0 10px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--gold);
+    }
+
+    h1 { font-size: 30px; }
+    h2 { font-size: 26px; }
+
+    .story, .guard, .note {
+      margin: 0 0 12px;
+      font-size: 18px;
+      line-height: 1.45;
+    }
+
+    .guard { color: var(--gold); font-weight: 700; }
+
+    .explain {
+      margin: 12px 0 0;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    .explain:empty { display: none; }
+
+    .primary.hidden { display: none; }
+
+    .controls {
+      margin: 0 0 16px;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    .primary, .choice {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      padding: 14px 16px;
+      min-height: 52px;
+      border: 0;
+      border-radius: 14px;
+      background: var(--wine);
+      color: var(--cream);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary:hover, .choice:hover { filter: brightness(1.1); }
+    .primary:active, .choice:active { transform: scale(0.98); }
+
+    .primary:focus-visible, .choice:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 2px;
+    }
+
+    .choice {
+      line-height: 1.3;
+      white-space: normal;
+    }
+
+    .choice:disabled { cursor: default; }
+
+    .choice.good {
+      background: #2d6a45;
+      outline: 2px solid var(--gold);
+    }
+
+    .choice.bad { background: #4c1822; }
+
+    .checkpoint-card { text-align: center; }
+    .checkpoint-card p { font-size: 22px; line-height: 1.35; margin: 8px 0 0; }
+    .checkpoint-card .answer { color: var(--gold); font-size: 18px; font-weight: 700; }
+    .checkpoint-card .explain { text-align: left; font-size: 17px; }
+    .checkpoint-card.fail { animation: shake 0.4s ease-in-out 2; }
+    .checkpoint-card.ok .burst span { animation: lift 1.5s ease-in forwards; }
+
+    .burst {
+      font-size: 34px;
+      letter-spacing: 6px;
+    }
+
+    @keyframes shake {
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+
+    @keyframes lift {
+      to { transform: translateY(-26px); opacity: 0.15; }
+    }
+
+    .hero {
+      margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.35;
+    }
+
+    .rating {
+      margin: 0 0 12px;
+      color: var(--gold);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 28px;
+    }
+
+    .meta {
+      margin: 0 0 12px;
+      font-size: 16px;
+    }
+
+    .cities {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+      margin: 0 0 8px;
+      padding: 0;
+      list-style: none;
+      font-size: 16px;
+    }
+
+    .cities li.done { color: var(--gold); }
+    .cities li.burned { color: #f0c2c8; }
+
+    @media (max-width: 420px) {
+      h1 { font-size: 26px; }
+      header { font-size: 14px; padding: 8px 10px; }
+      .story, .guard { font-size: 16px; }
+      .santa { font-size: 42px; }
+      .basket { font-size: 38px; }
+    }
+
+    @media (max-height: 640px) {
+      h1 { font-size: 24px; }
+      .card { padding: 14px 12px; }
+      .santa { font-size: 36px; }
+      .basket { font-size: 34px; }
+      .story { margin-bottom: 8px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .flake, .glyph, .santa, .checkpoint-card.fail, .checkpoint-card.ok .burst span {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="sky" aria-hidden="true"></div>
+
+  <div class="app">
+    <header id="hud" class="hidden">
+      <p id="hudRound">Раунд 1/12 — город Снежинск</p>
+      <p id="hudBasket">Для детей: 0/10</p>
+      <p id="hudTotal">Всего собрано: 0</p>
+      <p id="hudCheck">Детям отправлено: 0</p>
+      <p id="hudLetter">Письмо: 0</p>
+    </header>
+
+    <main id="field">
+      <div class="ground"></div>
+      <div class="forest" id="forest" aria-hidden="true"></div>
+      <div id="layer"></div>
+      <div id="sled">
+        <div id="effectline"></div>
+        <div id="float"></div>
+        <span class="santa" aria-hidden="true">🎅</span>
+        <span class="basket" aria-hidden="true">🧺</span>
+      </div>
+    </main>
+  </div>
+
+  <div id="title" class="overlay">
+    <div class="card">
+      <h1 id="titleHeading">Дед Мороз собирает подарки</h1>
+      <p class="story">Метель разметала сани, и подарки для детей падают над лесом. Лови их корзиной. Собрал десять — Снеговик у ворот задаст вопрос. Верный ответ — подарки улетают детям этого города. Неверный — собранное сгорает у ворот, и Дед Мороз едет дальше.</p>
+      <p class="controls">Мышь ведёт корзину, стрелки ← → тоже. На телефоне води пальцем. Дед Мороз едет вместе с корзиной.</p>
+      <button type="button" class="primary" id="startBtn">В путь</button>
+    </div>
+  </div>
+
+  <div id="question" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="guardLine">
+    <div class="card">
+      <p class="guard" id="guardLine">⛄ Стой, Дед Мороз! Ответь-ка…</p>
+      <p class="note" id="letterNote"></p>
+      <h2 id="questionText"></h2>
+      <div id="options"></div>
+    </div>
+  </div>
+
+  <div id="checkpoint" class="overlay hidden" role="status" aria-live="polite">
+    <div class="card checkpoint-card" id="checkpointCard">
+      <div class="burst" id="checkpointBurst" aria-hidden="true">🎁 🎁 🎁</div>
+      <p id="checkpointText"></p>
+      <p class="answer" id="checkpointAnswer"></p>
+      <p class="explain" id="checkpointExplain"></p>
+      <button type="button" class="primary" id="checkpointOk">Ок</button>
+    </div>
+  </div>
+
+  <div id="result" class="overlay hidden">
+    <div class="card">
+      <p class="hero" id="resultHero"></p>
+      <p class="rating" id="resultRating"></p>
+      <p class="meta" id="resultMeta"></p>
+      <ul class="cities" id="resultCities"></ul>
+      <button type="button" class="primary" id="againBtn">Играть снова</button>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var hud = document.getElementById("hud");
+      var hudRound = document.getElementById("hudRound");
+      var hudBasket = document.getElementById("hudBasket");
+      var hudTotal = document.getElementById("hudTotal");
+      var hudCheck = document.getElementById("hudCheck");
+      var hudLetter = document.getElementById("hudLetter");
+      var field = document.getElementById("field");
+      var layer = document.getElementById("layer");
+      var sled = document.getElementById("sled");
+      var effectline = document.getElementById("effectline");
+      var floatEl = document.getElementById("float");
+      var titleOverlay = document.getElementById("title");
+      var titleHeading = document.getElementById("titleHeading");
+      var questionOverlay = document.getElementById("question");
+      var letterNote = document.getElementById("letterNote");
+      var questionText = document.getElementById("questionText");
+      var checkpointAnswer = document.getElementById("checkpointAnswer");
+      var checkpointExplain = document.getElementById("checkpointExplain");
+      var optionsEl = document.getElementById("options");
+      var checkpointOverlay = document.getElementById("checkpoint");
+      var checkpointCard = document.getElementById("checkpointCard");
+      var checkpointBurst = document.getElementById("checkpointBurst");
+      var checkpointText = document.getElementById("checkpointText");
+      var resultOverlay = document.getElementById("result");
+      var resultHero = document.getElementById("resultHero");
+      var resultRating = document.getElementById("resultRating");
+      var resultMeta = document.getElementById("resultMeta");
+      var resultCities = document.getElementById("resultCities");
+
+      /* Состояние партии. Неверный ответ не откатывает город: подарки раунда сгорают. */
+      var state = {
+        mode: "title",
+        currentRound: 1,
+        basket: [],
+        debt: 0,
+        totalCaught: 0,
+        children: 0,
+        delivered: [],
+        burned: [],
+        mistakes: 0,
+        lettersHeld: 0,
+        lettersSpawned: 0,
+        catchesUntilBonus: 17,
+        bonusReady: false,
+        effects: emptyEffects(),
+        items: [],
+        basketX: 0,
+        keys: { left: false, right: false },
+        roundStartedAt: 0,
+        lastTs: 0,
+        spawnAcc: 0,
+        bombAcc: 0,
+        timer: 0,
+        locked: false,
+        checkpointNext: null,
+        best: null
+      };
+
+      function emptyEffects() {
+        return {
+          slowUntil: 0,
+          magnetUntil: 0,
+          shield: false,
+          doubleUntil: 0,
+          goldenLeft: 0
+        };
+      }
+
+      function rand(min, max) {
+        return min + Math.random() * (max - min);
+      }
+
+      function randInt(min, max) {
+        return min + Math.floor(Math.random() * (max - min + 1));
+      }
+
+      function choice(list) {
+        return list[Math.floor(Math.random() * list.length)];
+      }
+
+      function pickWeighted(list) {
+        var total = 0;
+        var i;
+        var roll;
+        for (i = 0; i < list.length; i++) total += list[i].weight;
+        roll = Math.random() * total;
+        for (i = 0; i < list.length; i++) {
+          roll -= list[i].weight;
+          if (roll <= 0) return list[i];
+        }
+        return list[list.length - 1];
+      }
+
+      function fieldSize() {
+        return { w: field.clientWidth, h: field.clientHeight };
+      }
+
+      function nowMs() {
+        return performance.now();
+      }
+
+      function secondsLeft(until) {
+        return Math.max(0, Math.ceil((until - nowMs()) / 1000));
+      }
+
+      /* ---------- Снег и подписи ---------- */
+
+      /* Ёлки на всю ширину поля, в том числе на широком экране ноутбука. */
+      function fillForest() {
+        var forest = document.getElementById("forest");
+        var width = Math.max(window.innerWidth, field.clientWidth, 1280);
+        var count = Math.ceil(width / 32) + 6;
+        var text = "";
+        var i;
+        for (i = 0; i < count; i++) text += (i % 2 === 0) ? "🌲" : "🎄";
+        forest.textContent = text;
+      }
+
+      function makeSnow() {
+        var sky = document.getElementById("sky");
+        var glyphs = ["❄", "❅", "❆", "•"];
+        var i;
+        var flake;
+        for (i = 0; i < 26; i++) {
+          flake = document.createElement("span");
+          flake.className = "flake";
+          flake.textContent = glyphs[i % glyphs.length];
+          flake.style.left = Math.random() * 100 + "%";
+          flake.style.fontSize = (10 + Math.random() * 16) + "px";
+          flake.style.animationDuration = (8 + Math.random() * 12) + "s";
+          flake.style.animationDelay = (-Math.random() * 14) + "s";
+          flake.style.opacity = String(0.35 + Math.random() * 0.55);
+          sky.appendChild(flake);
+        }
+      }
+
+      function applyTitle() {
+        var heading = "Дед Мороз собирает подарки для " + SETTINGS.NAME;
+        titleHeading.textContent = heading;
+        document.title = heading;
+      }
+
+      /* Сколько подарков сейчас засчитано детям. Долг от промахов уводит число в минус. */
+      function childrenCount() {
+        return state.basket.length - state.debt;
+      }
+
+      function renderHud() {
+        var cities = SETTINGS.CITIES;
+        var city = cities[state.currentRound - 1] || "";
+        hudRound.textContent = "Раунд " + state.currentRound + "/" + SETTINGS.ROUNDS + " — город " + city;
+        hudBasket.textContent = "Для детей: " + childrenCount() + "/" + SETTINGS.TARGET;
+        hudTotal.textContent = "Всего собрано: " + state.totalCaught;
+        hudCheck.textContent = "Детям отправлено: " + state.children;
+        hudLetter.textContent = "Письмо: " + state.lettersHeld;
+      }
+
+      function renderEffects() {
+        var fx = state.effects;
+        var now = nowMs();
+        var parts = [];
+        if (now < fx.slowUntil) parts.push("⏳ " + secondsLeft(fx.slowUntil) + " с");
+        if (now < fx.magnetUntil) parts.push("🧲 " + secondsLeft(fx.magnetUntil) + " с");
+        if (fx.shield) parts.push("❤️ щит");
+        if (now < fx.doubleUntil) parts.push("✨ " + secondsLeft(fx.doubleUntil) + " с");
+        if (fx.goldenLeft > 0) parts.push("🎯 ещё " + fx.goldenLeft);
+        effectline.textContent = parts.join("   ");
+      }
+
+      function showFloat(text) {
+        floatEl.textContent = text;
+        floatEl.classList.remove("show");
+        void floatEl.offsetWidth;
+        floatEl.classList.add("show");
+      }
+
+      function pulseBasket() {
+        sled.classList.remove("pop");
+        void sled.offsetWidth;
+        sled.classList.add("pop");
+      }
+
+      /* ---------- Корзина ---------- */
+
+      function placeSled() {
+        var w = fieldSize().w;
+        var half;
+        if (w < 20) return;
+        half = SETTINGS.BASKET_WIDTH / 2;
+        if (!state.basketX) state.basketX = w / 2;
+        state.basketX = Math.max(half, Math.min(w - half, state.basketX));
+        sled.style.left = (state.basketX - half) + "px";
+      }
+
+      function pointBasket(clientX) {
+        var rect = field.getBoundingClientRect();
+        state.basketX = clientX - rect.left;
+        placeSled();
+      }
+
+      /* ---------- Падающие предметы ---------- */
+
+      function clearItems() {
+        var i;
+        for (i = 0; i < state.items.length; i++) state.items[i].el.remove();
+        state.items.length = 0;
+      }
+
+      function removeAt(index) {
+        state.items[index].el.remove();
+        state.items.splice(index, 1);
+      }
+
+      function addItem(kind, emoji, size, baseSpeed, extra) {
+        var box = fieldSize();
+        var el = document.createElement("div");
+        var glyph = document.createElement("span");
+        var item;
+        if (box.w < 40 || box.h < 40) return null;
+        glyph.className = "glyph";
+        glyph.textContent = emoji;
+        glyph.style.fontSize = size + "px";
+        glyph.style.animationDelay = (-Math.random()) + "s";
+        el.className = "item";
+        el.style.width = size + "px";
+        el.style.height = size + "px";
+        el.appendChild(glyph);
+        if (extra.filter) glyph.style.filter = extra.filter;
+        layer.appendChild(el);
+        item = {
+          kind: kind,
+          el: el,
+          x: rand(8, Math.max(9, box.w - size - 8)),
+          y: -size - rand(0, 40),
+          size: size,
+          baseSpeed: baseSpeed,
+          jitter: rand(0.85, 1.15),
+          bonus: extra.bonus || null,
+          points: extra.points || 0
+        };
+        el.style.transform = "translate(" + item.x + "px," + item.y + "px)";
+        state.items.push(item);
+        return item;
+      }
+
+      function spawnGift() {
+        var type = pickWeighted(SETTINGS.GIFT_TYPES);
+        addItem("gift", type.emoji, type.size, type.speed, {
+          filter: choice(type.filters),
+          points: type.points
+        });
+      }
+
+      function spawnBomb() {
+        addItem("bomb", "💣", 34, SETTINGS.BOMB_SPEED, {});
+      }
+
+      /* Письмо не входит в пул на 12-м раунде и после двух выпадений. */
+      function bonusPool() {
+        var list = [];
+        var i;
+        var bonus;
+        for (i = 0; i < SETTINGS.BONUSES.length; i++) {
+          bonus = SETTINGS.BONUSES[i];
+          if (bonus.id === "letter") {
+            if (state.currentRound >= SETTINGS.ROUNDS) continue;
+            if (state.lettersSpawned >= SETTINGS.LETTER_LIMIT) continue;
+          }
+          list.push(bonus);
+        }
+        return list;
+      }
+
+      function spawnBonus() {
+        var pool = bonusPool();
+        var bonus;
+        if (!pool.length) return;
+        bonus = pickWeighted(pool);
+        if (!addItem("bonus", bonus.emoji, 36, SETTINGS.BONUS_SPEED, { bonus: bonus })) return;
+        if (bonus.id === "letter") state.lettersSpawned += 1;
+      }
+
+      function fallSpeed(item) {
+        /* Ускорение только внутри текущего города и не выше потолка, иначе после долгого раунда подарки не поймать. */
+        var elapsed = Math.min((nowMs() - state.roundStartedAt) / 1000, SETTINGS.ACCEL_MAX_SEC);
+        var accel = 1 + elapsed * SETTINGS.ACCEL_PER_SEC;
+        var slow = nowMs() < state.effects.slowUntil ? 0.5 : 1;
+        return item.baseSpeed * SETTINGS.FALL_SCALE * item.jitter * accel * slow;
+      }
+
+      /* Зона ловли берётся с самой корзины, чтобы совпадать с вёрсткой и вырезом телефона. */
+      function basketBand() {
+        var fieldRect = field.getBoundingClientRect();
+        var glyph = sled.querySelector(".basket").getBoundingClientRect();
+        if (glyph.height < 5) return null;
+        return {
+          top: glyph.top - fieldRect.top - 10,
+          bottom: glyph.bottom - fieldRect.top + 12,
+          mid: glyph.top + glyph.height / 2 - fieldRect.top
+        };
+      }
+
+      function attractGift(item, dt) {
+        var band;
+        var dx;
+        var dy;
+        var dist;
+        if (item.kind !== "gift") return;
+        if (nowMs() >= state.effects.magnetUntil) return;
+        band = basketBand();
+        if (!band) return;
+        dx = state.basketX - (item.x + item.size / 2);
+        dy = band.mid - (item.y + item.size / 2);
+        dist = Math.hypot(dx, dy);
+        if (dist > SETTINGS.MAGNET_RADIUS || dist < 1) return;
+        item.x += (dx / dist) * SETTINGS.MAGNET_PULL * dt;
+      }
+
+      function hitsBasket(item) {
+        var band = basketBand();
+        var itemBottom;
+        var center;
+        var vertical;
+        var horizontal;
+        if (!band) return false;
+        itemBottom = item.y + item.size;
+        center = item.x + item.size / 2;
+        vertical = itemBottom >= band.top && item.y <= band.bottom;
+        horizontal = Math.abs(center - state.basketX) <= SETTINGS.BASKET_WIDTH / 2 + item.size * 0.2;
+        return vertical && horizontal;
+      }
+
+      function giftScore() {
+        var pts = 0;
+        var doubled = nowMs() < state.effects.doubleUntil;
+        /* База типа уже лежит в item.points. Звёздный свет удваивает её, золотая корзина добавляет +5. */
+        pts = doubled ? state.pendingBase * 2 : state.pendingBase;
+        if (state.effects.goldenLeft > 0) {
+          pts += 5;
+          state.effects.goldenLeft -= 1;
+        }
+        return pts;
+      }
+
+      function catchItem(item) {
+        var bonus;
+        var label;
+        if (item.kind === "gift") {
+          state.totalCaught += 1;
+          state.catchesUntilBonus -= 1;
+          if (state.catchesUntilBonus <= 0) state.bonusReady = true;
+          /* Пойманный подарок сначала закрывает минус за промах, в корзину не попадает. */
+          if (state.debt > 0) {
+            state.debt -= 1;
+            pulseBasket();
+            renderHud();
+            showFloat("🎁 Минус закрыт");
+            return false;
+          }
+          state.pendingBase = item.points;
+          state.basket.push({ points: giftScore() });
+          pulseBasket();
+          renderHud();
+          if (state.basket.length >= SETTINGS.TARGET) {
+            openQuestion();
+            return true;
+          }
+          return false;
+        }
+        if (item.kind === "bomb") {
+          if (state.effects.shield && state.basket.length > 0) {
+            state.effects.shield = false;
+            showFloat("❤️ Тёплые рукавицы спасли подарок");
+          } else if (state.basket.length > 0) {
+            state.basket.pop();
+            showFloat("💣 Минус подарок");
+            renderHud();
+          } else {
+            showFloat("💣 Корзина пуста");
+          }
+          pulseBasket();
+          return false;
+        }
+        bonus = item.bonus;
+        label = bonus.emoji + " " + bonus.name;
+        if (bonus.id === "slow") {
+          state.effects.slowUntil = nowMs() + bonus.duration * 1000;
+          label = bonus.emoji + " " + bonus.name + " — " + bonus.duration + " с";
+        } else if (bonus.id === "magnet") {
+          state.effects.magnetUntil = nowMs() + bonus.duration * 1000;
+          label = bonus.emoji + " " + bonus.name + " — " + bonus.duration + " с";
+        } else if (bonus.id === "shield") {
+          state.effects.shield = true;
+          label = bonus.emoji + " " + bonus.name + " — до бомбы";
+        } else if (bonus.id === "double") {
+          state.effects.doubleUntil = nowMs() + bonus.duration * 1000;
+          label = bonus.emoji + " " + bonus.name + " — " + bonus.duration + " с";
+        } else if (bonus.id === "golden") {
+          state.effects.goldenLeft += bonus.charges;
+          label = bonus.emoji + " " + bonus.name + " — ещё " + state.effects.goldenLeft;
+        } else if (bonus.id === "letter") {
+          state.lettersHeld += 1;
+          label = bonus.emoji + " " + bonus.name + " — следующий вопрос засчитан";
+          renderHud();
+        }
+        showFloat(label);
+        pulseBasket();
+        return false;
+      }
+
+      /* ---------- Вопросы и чекпоинты ---------- */
+
+      function hideQuestion() {
+        questionOverlay.classList.add("hidden");
+      }
+
+      function hideCheckpoint() {
+        checkpointOverlay.classList.add("hidden");
+      }
+
+      function openQuestion() {
+        var round = state.currentRound;
+        var question = SETTINGS.QUESTIONS[round - 1];
+        var byLetter = state.lettersHeld > 0;
+        var i;
+        var button;
+        state.mode = "question";
+        state.locked = false;
+        clearItems();
+        clearTimeout(state.timer);
+        if (byLetter) {
+          state.lettersHeld -= 1;
+          renderHud();
+          resolveCorrect();
+          return;
+        }
+        letterNote.textContent = "";
+        questionText.textContent = question.text;
+        optionsEl.innerHTML = "";
+        for (i = 0; i < question.options.length; i++) {
+          button = document.createElement("button");
+          button.type = "button";
+          button.className = "choice";
+          button.textContent = question.options[i];
+          button.addEventListener("click", submitFactory(i));
+          optionsEl.appendChild(button);
+        }
+        questionOverlay.classList.remove("hidden");
+        renderHud();
+      }
+
+      function submitFactory(index) {
+        return function () {
+          submitAnswer(index);
+        };
+      }
+
+      function submitAnswer(index) {
+        var question;
+        if (state.mode !== "question" || state.locked) return;
+        question = SETTINGS.QUESTIONS[state.currentRound - 1];
+        if (index < 0 || index >= question.options.length) return;
+        state.locked = true;
+        if (index === question.correct) resolveCorrect();
+        else resolveWrong();
+      }
+
+      /* Верный ответ отправляет подарки детям. Неверный сжигает только этот город и ведёт дальше. */
+      function afterRound(round) {
+        if (round >= SETTINGS.ROUNDS) showResult();
+        else startRound(round + 1);
+      }
+
+      function resolveCorrect() {
+        var round;
+        var city;
+        var question;
+        var pts;
+        var i;
+        if (state.mode !== "question") return;
+        round = state.currentRound;
+        city = SETTINGS.CITIES[round - 1];
+        question = SETTINGS.QUESTIONS[round - 1];
+        pts = 0;
+        for (i = 0; i < state.basket.length; i++) pts += state.basket[i].points;
+        state.children += pts;
+        state.basket = [];
+        state.debt = 0;
+        if (state.delivered.indexOf(round - 1) === -1) state.delivered.push(round - 1);
+        renderHud();
+        hideQuestion();
+        showCheckpoint(
+          "ok",
+          "🎁 Подарки улетели к детям в " + city + "!",
+          "Верный ответ: " + question.options[question.correct],
+          question.explain,
+          function () { afterRound(round); }
+        );
+      }
+
+      function resolveWrong() {
+        var round;
+        var city;
+        var question;
+        if (state.mode !== "question") return;
+        round = state.currentRound;
+        city = SETTINGS.CITIES[round - 1];
+        question = SETTINGS.QUESTIONS[round - 1];
+        state.mistakes += 1;
+        state.basket = [];
+        state.debt = 0;
+        if (state.burned.indexOf(round - 1) === -1) state.burned.push(round - 1);
+        renderHud();
+        hideQuestion();
+        showCheckpoint(
+          "fail",
+          "🔥 Собранные подарки сгорели у ворот и не достались детям в " + city + ". " +
+            (round >= SETTINGS.ROUNDS ? "Путь по городам закончен." : "Впереди следующий город."),
+          "Верный ответ: " + question.options[question.correct],
+          question.explain,
+          function () { afterRound(round); }
+        );
+      }
+
+      function showCheckpoint(kind, text, answer, explain, next) {
+        state.mode = "checkpoint";
+        state.locked = false;
+        clearItems();
+        checkpointCard.className = "card checkpoint-card " + kind;
+        checkpointBurst.textContent = kind === "ok" ? "🎁 🎁 🎁" : "🔥 🔥 🔥";
+        checkpointText.textContent = text;
+        checkpointAnswer.textContent = answer || "";
+        checkpointExplain.textContent = explain ? "Пояснение: " + explain : "";
+        checkpointOverlay.classList.remove("hidden");
+        renderEffects();
+        clearTimeout(state.timer);
+        state.checkpointNext = next;
+      }
+
+      function confirmCheckpoint() {
+        var next = state.checkpointNext;
+        if (state.mode !== "checkpoint" || !next) return;
+        state.checkpointNext = null;
+        next();
+      }
+
+      function ratingText(mistakes) {
+        if (mistakes === 0) return "Дед Мороз доволен";
+        if (mistakes <= 3) return "Неплохо";
+        return "Снегурочка расстроена";
+      }
+
+      function loadBest() {
+        try {
+          var raw = localStorage.getItem(SETTINGS.STORAGE_KEY);
+          if (raw === null || raw === "") return null;
+          var num = Number(raw);
+          return isFinite(num) ? num : null;
+        } catch (err) {
+          return null;
+        }
+      }
+
+      function saveBest(value) {
+        try {
+          localStorage.setItem(SETTINGS.STORAGE_KEY, String(value));
+        } catch (err) {
+          /* Хранилище может быть закрыто — игра без рекорда всё равно заканчивается. */
+        }
+      }
+
+      function showResult() {
+        var best = loadBest();
+        var i;
+        var li;
+        state.mode = "result";
+        clearItems();
+        hideCheckpoint();
+        if (best === null || state.children > best) {
+          saveBest(state.children);
+          best = state.children;
+        }
+        resultHero.textContent = "Сегодня ты сделал счастливыми " + state.children + " детей!";
+        resultRating.textContent = ratingText(state.mistakes);
+        resultMeta.textContent = "Городов с подарками: " + state.delivered.length + " из " + SETTINGS.ROUNDS + ". Сгорело: " + state.burned.length + ". Лучший результат: " + best + " детей.";
+        resultCities.innerHTML = "";
+        for (i = 0; i < SETTINGS.CITIES.length; i++) {
+          li = document.createElement("li");
+          if (state.delivered.indexOf(i) !== -1) {
+            li.className = "done";
+            li.textContent = "✓ " + SETTINGS.CITIES[i];
+          } else {
+            li.className = "burned";
+            li.textContent = "✕ " + SETTINGS.CITIES[i];
+          }
+          resultCities.appendChild(li);
+        }
+        resultOverlay.classList.remove("hidden");
+        renderHud();
+      }
+
+      /* ---------- Раунды ---------- */
+
+      /* Подарок ушёл за нижний край: счётчик «Для детей» уменьшается на 1 и может стать отрицательным. */
+      function missGift() {
+        if (state.basket.length > 0) {
+          state.basket.pop();
+          showFloat("🎁 Улетел — минус 1");
+        } else if (state.debt < SETTINGS.DEBT_MAX) {
+          state.debt += 1;
+          showFloat("🎁 Улетел — минус 1");
+        }
+        renderHud();
+      }
+
+      function clearTimedEffects() {
+        state.effects.slowUntil = 0;
+        state.effects.magnetUntil = 0;
+        state.effects.doubleUntil = 0;
+        state.effects.goldenLeft = 0;
+      }
+
+      function startRound(n) {
+        state.currentRound = n;
+        state.basket = [];
+        state.debt = 0;
+        clearItems();
+        clearTimedEffects();
+        /* Новый заход в город всегда с начальной скоростью, даже если прошлый заход разогнался. */
+        state.roundStartedAt = nowMs();
+        state.spawnAcc = 0.25;
+        state.bombAcc = 1.4;
+        state.checkpointNext = null;
+        state.mode = "playing";
+        state.locked = false;
+        hideQuestion();
+        hideCheckpoint();
+        floatEl.classList.remove("show");
+        renderHud();
+        spawnGift();
+      }
+
+      function startAttempt() {
+        clearTimeout(state.timer);
+        state.timer = 0;
+        state.locked = false;
+        state.currentRound = 1;
+        state.basket = [];
+        state.debt = 0;
+        state.totalCaught = 0;
+        state.children = 0;
+        state.delivered = [];
+        state.burned = [];
+        state.mistakes = 0;
+        state.lettersHeld = 0;
+        state.lettersSpawned = 0;
+        state.bonusReady = false;
+        state.catchesUntilBonus = randInt(SETTINGS.BONUS_GAP_MIN, SETTINGS.BONUS_GAP_MAX);
+        state.effects = emptyEffects();
+        clearItems();
+        titleOverlay.classList.add("hidden");
+        questionOverlay.classList.add("hidden");
+        checkpointOverlay.classList.add("hidden");
+        resultOverlay.classList.add("hidden");
+        hud.classList.remove("hidden");
+        startRound(1);
+      }
+
+      function updatePlaying(dt) {
+        var box = fieldSize();
+        var elapsed;
+        var spawnEvery;
+        var bombEvery;
+        var i;
+        var item;
+        var stop;
+        if (state.keys.left) state.basketX -= SETTINGS.KEY_SPEED * dt;
+        if (state.keys.right) state.basketX += SETTINGS.KEY_SPEED * dt;
+
+        if (state.bonusReady && state.items.length < SETTINGS.MAX_ITEMS) {
+          spawnBonus();
+          state.bonusReady = false;
+          state.catchesUntilBonus = randInt(SETTINGS.BONUS_GAP_MIN, SETTINGS.BONUS_GAP_MAX);
+        }
+
+        elapsed = Math.min((nowMs() - state.roundStartedAt) / 1000, SETTINGS.ACCEL_MAX_SEC);
+        spawnEvery = Math.max(SETTINGS.SPAWN_MIN, SETTINGS.SPAWN_EVERY - elapsed * SETTINGS.SPAWN_TIGHTEN);
+        state.spawnAcc += dt;
+        if (state.spawnAcc >= spawnEvery && state.items.length < SETTINGS.MAX_ITEMS) {
+          state.spawnAcc = 0;
+          spawnGift();
+        }
+        bombEvery = Math.max(SETTINGS.BOMB_MIN, SETTINGS.BOMB_EVERY - elapsed * 0.04);
+        state.bombAcc += dt;
+        if (state.bombAcc >= bombEvery && state.items.length < SETTINGS.MAX_ITEMS) {
+          state.bombAcc = -Math.random() * 1.2;
+          spawnBomb();
+        }
+
+        for (i = state.items.length - 1; i >= 0; i--) {
+          item = state.items[i];
+          item.y += fallSpeed(item) * dt;
+          attractGift(item, dt);
+          item.el.style.transform = "translate(" + item.x + "px," + item.y + "px)";
+          if (hitsBasket(item)) {
+            stop = catchItem(item);
+            /* Десятый подарок сам убирает всё поле и открывает вопрос. Повторный removeAt сломал бы пустой список. */
+            if (stop) return;
+            removeAt(i);
+            continue;
+          }
+          if (item.y > box.h + 30) {
+            if (item.kind === "gift") missGift();
+            removeAt(i);
+          }
+        }
+      }
+
+      function frame(ts) {
+        var dt = state.lastTs ? Math.min(0.05, (ts - state.lastTs) / 1000) : 0;
+        state.lastTs = ts;
+        if (state.mode === "playing") updatePlaying(dt);
+        placeSled();
+        if (state.mode === "playing" || state.mode === "question" || state.mode === "checkpoint") {
+          renderEffects();
+        }
+        requestAnimationFrame(frame);
+      }
+
+      function onKeyDown(event) {
+        var key = event.key;
+        if (key === "ArrowLeft" || key === "ArrowRight" || key === "ArrowUp" || key === "ArrowDown") {
+          event.preventDefault();
+        }
+        if (key === "ArrowLeft") state.keys.left = true;
+        if (key === "ArrowRight") state.keys.right = true;
+        if ((key === "Enter" || key === " ") && state.mode === "checkpoint") {
+          event.preventDefault();
+          confirmCheckpoint();
+          return;
+        }
+        if ((key === "Enter" || key === " ") && (state.mode === "title" || state.mode === "result")) {
+          event.preventDefault();
+          startAttempt();
+          return;
+        }
+        if (state.mode === "question" && (key === "1" || key === "2" || key === "3" || key === "4")) {
+          submitAnswer(Number(key) - 1);
+        }
+      }
+
+      function onKeyUp(event) {
+        if (event.key === "ArrowLeft") state.keys.left = false;
+        if (event.key === "ArrowRight") state.keys.right = false;
+      }
+
+      function bindInput() {
+        document.getElementById("startBtn").addEventListener("click", startAttempt);
+        document.getElementById("againBtn").addEventListener("click", startAttempt);
+        document.getElementById("checkpointOk").addEventListener("click", confirmCheckpoint);
+        window.addEventListener("keydown", onKeyDown);
+        window.addEventListener("keyup", onKeyUp);
+        window.addEventListener("blur", function () {
+          state.keys.left = false;
+          state.keys.right = false;
+        });
+        window.addEventListener("pointermove", function (event) {
+          pointBasket(event.clientX);
+        });
+        window.addEventListener("pointerdown", function (event) {
+          if (event.target.closest && event.target.closest("button")) return;
+          pointBasket(event.clientX);
+        });
+        field.addEventListener("touchstart", function (event) {
+          if (event.touches[0]) pointBasket(event.touches[0].clientX);
+        }, { passive: true });
+        field.addEventListener("touchmove", function (event) {
+          event.preventDefault();
+          if (event.touches[0]) pointBasket(event.touches[0].clientX);
+        }, { passive: false });
+        window.addEventListener("resize", function () {
+          fillForest();
+          placeSled();
+        });
+        document.addEventListener("visibilitychange", function () {
+          state.lastTs = 0;
+          state.keys.left = false;
+          state.keys.right = false;
+        });
+      }
+
+      function boot() {
+        document.documentElement.style.setProperty("--basket-w", SETTINGS.BASKET_WIDTH + "px");
+        if (SETTINGS.CITIES.length !== SETTINGS.ROUNDS || SETTINGS.QUESTIONS.length !== SETTINGS.ROUNDS) {
+          console.warn("В настройках городов и вопросов должно быть ровно ROUNDS.");
+        }
+        state.best = loadBest();
+        makeSnow();
+        fillForest();
+        applyTitle();
+        bindInput();
+        placeSled();
+        requestAnimationFrame(frame);
+      }
+
+      /* ============================================================
+         НАСТРОЙКИ
+         Меняй значения здесь. Имя попадает в заголовок:
+         «Дед Мороз собирает подарки для [ИМЯ]».
+         Веса подарков и бонусов — относительные: чем больше число,
+         тем чаще выпадает этот тип. Интервал бонуса — в пойманных
+         подарках. Скорость типа умножается на FALL_SCALE и даёт
+         пиксели в секунду.
+         ============================================================ */
+      var SETTINGS = {
+        NAME: "Любимой",
+        TARGET: 10,
+        ROUNDS: 12,
+        FALL_SCALE: 78,
+        ACCEL_PER_SEC: 0.012,
+        ACCEL_MAX_SEC: 20,
+        DEBT_MAX: 5,
+        SPAWN_EVERY: 0.82,
+        SPAWN_MIN: 0.4,
+        SPAWN_TIGHTEN: 0.018,
+        BOMB_EVERY: 2.7,
+        BOMB_MIN: 1.85,
+        BOMB_SPEED: 1.7,
+        BONUS_SPEED: 1.25,
+        BONUS_GAP_MIN: 15,
+        BONUS_GAP_MAX: 20,
+        MAGNET_RADIUS: 80,
+        MAGNET_PULL: 340,
+        LETTER_LIMIT: 2,
+        KEY_SPEED: 520,
+        BASKET_WIDTH: 110,
+        MAX_ITEMS: 16,
+        CHECKPOINT_MS: 1700,
+        ANSWER_MS: 550,
+        LETTER_MS: 1500,
+        EXPLAIN_MS: 3600,
+        STORAGE_KEY: "ded-moroz-presents-best",
+
+        GIFT_TYPES: [
+          {
+            id: "small",
+            emoji: "🎁",
+            size: 24,
+            points: 1,
+            speed: 1.6,
+            weight: 60,
+            filters: [
+              "hue-rotate(0deg)",
+              "hue-rotate(90deg)",
+              "hue-rotate(180deg)",
+              "hue-rotate(270deg)"
+            ]
+          },
+          {
+            id: "medium",
+            emoji: "🎁",
+            size: 36,
+            points: 2,
+            speed: 1.2,
+            weight: 30,
+            filters: [
+              "hue-rotate(20deg)",
+              "hue-rotate(140deg)",
+              "hue-rotate(200deg)",
+              "hue-rotate(300deg)"
+            ]
+          },
+          {
+            id: "large",
+            emoji: "🎁",
+            size: 52,
+            points: 4,
+            speed: 0.8,
+            weight: 10,
+            filters: [
+              "hue-rotate(35deg)",
+              "hue-rotate(330deg)"
+            ]
+          }
+        ],
+
+        BONUSES: [
+          { id: "slow", emoji: "⏳", name: "Метель стихла", weight: 5, duration: 5 },
+          { id: "magnet", emoji: "🧲", name: "Волшебный посох", weight: 4, duration: 8 },
+          { id: "shield", emoji: "❤️", name: "Тёплые рукавицы", weight: 4 },
+          { id: "double", emoji: "✨", name: "Звёздный свет", weight: 4, duration: 6 },
+          { id: "golden", emoji: "🎯", name: "Золотая корзина", weight: 2, charges: 3 },
+          { id: "letter", emoji: "🕊️", name: "Письмо от Снегурочки", weight: 1 }
+        ],
+
+        CITIES: [
+          "Снежинск",
+          "Морозовск",
+          "Сугробово",
+          "Ледянка",
+          "Пургово",
+          "Валенково",
+          "Снеговиково",
+          "Метельск",
+          "Хлопушкино",
+          "Мандариновск",
+          "Гирляндино",
+          "Курантово"
+        ],
+
+        QUESTIONS: [
+          {
+            text: "Откуда пришла традиция украшать ёлку?",
+            options: ["Древний Рим", "Германия XVI века", "Викторианская Англия", "Скандинавия эпохи викингов"],
+            correct: 1,
+            explain: "Первые украшенные ёлки задокументированы в немецких городах; в Англию традицию принёс принц Альберт в XIX веке."
+          },
+          {
+            text: "Какая новогодняя песня впервые возглавила Billboard Hot 100 спустя 25 лет после выхода?",
+            options: [
+              "«Last Christmas» — Wham!",
+              "«All I Want for Christmas Is You» — Мэрайя Кэри",
+              "«Rockin' Around the Christmas Tree» — Бренда Ли",
+              "«White Christmas» — Бинг Кросби"
+            ],
+            correct: 1,
+            explain: "Вышла в 1994-м, а на первое место попала только в 2019-м — через 25 лет."
+          },
+          {
+            text: "Какой рождественский символ изначально не имел отношения к Рождеству?",
+            options: ["Омела", "Пуансеттия", "Адвент-календарь", "Рождественский чулок"],
+            correct: 0,
+            explain: "Кельтские друиды считали омелу священной задолго до Рождества — она символизировала жизнь зимой."
+          },
+          {
+            text: "Какой фильм в США традиционно смотрят на Рождество чаще всего?",
+            options: ["«Один дома»", "«Эта замечательная жизнь»", "«Гринч — похититель Рождества»", "«Чудо на 34-й улице»"],
+            correct: 1,
+            explain: "Провалился в прокате, но стал культовым благодаря телепоказам 1970-х."
+          },
+          {
+            text: "Почему на Новый год в России едят мандарины?",
+            options: ["Традиция с царских времён", "Доступность в СССР", "Символ солнца", "Дань китайской традиции"],
+            correct: 1,
+            explain: "Их завозили из Абхазии и Марокко к празднику, они были редким зимним фруктом."
+          },
+          {
+            text: "Какая страна первой ввела обычай обмениваться подарками на Новый год?",
+            options: ["Древний Рим", "Китай", "Германия", "Древний Египет"],
+            correct: 0,
+            explain: "На Сатурналиях римляне дарили небольшие подарки — древнейшая документированная традиция."
+          },
+          {
+            text: "Что означает «Адвент» в переводе с латыни?",
+            options: ["«Ожидание»", "«Приход»", "«Свет»", "«Начало»"],
+            correct: 1,
+            explain: "Adventus — «прибытие», «наступление»."
+          },
+          {
+            text: "Какой художник написал «Зимний пейзаж» с самой дорогой ценой на аукционе?",
+            options: ["Клод Моне", "Василий Кандинский", "Иван Шишкин", "Камиль Писсарро"],
+            correct: 1,
+            explain: "Его «Зимний пейзаж» (1909) ушёл за £12,7 млн в 2017-м."
+          },
+          {
+            text: "Что означает слово «карнавал»?",
+            options: ["«Прощай, мясо»", "«Корабль дураков»", "«Праздник света»", "«Песня зимы»"],
+            correct: 0,
+            explain: "От латинского «carne vale» — «прощай, мясо», канун Великого поста."
+          },
+          {
+            text: "Что означает «Boxing Day» (26 декабря) в Великобритании?",
+            options: ["День бокса", "День подарков прислуге и бедным", "День распродаж", "День зимнего солнцестояния"],
+            correct: 1,
+            explain: "Господа дарили «рождественские коробки» слугам и беднякам."
+          },
+          {
+            text: "Какой зимний праздник в Европе исторически называли «праздником дураков»?",
+            options: ["День святого Стефана", "Праздник осла", "Двенадцатая ночь", "День святого Николая"],
+            correct: 1,
+            explain: "Средневековый пародийный праздник, где «осёл» въезжал в церковь, а служба велась с ослиным рёвом."
+          },
+          {
+            text: "Какая страна подарила миру традицию новогодних «резолюций» (обещаний себе на год)?",
+            options: ["Древний Вавилон", "Древний Рим", "Викторианская Англия", "Древняя Греция"],
+            correct: 0,
+            explain: "Вавилоняне на Новый год (Акиту) давали обещания богам — вернуть долги, например."
+          }
+        ]
+      };
+
+      boot();
+    })();
+  </script>
+</body>
+</html>
